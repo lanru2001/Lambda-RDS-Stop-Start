@@ -50,7 +50,7 @@ resource "aws_lambda_function" "test_lambda" {
   # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
   source_code_hash = filebase64sha256("lambda_function_payload.zip")
 
-  runtime = "nodejs12.x"
+  runtime = "python2.7"
   
   depends_on = [
     aws_iam_role_policy_attachment.lambda_logs,
@@ -58,7 +58,7 @@ resource "aws_lambda_function" "test_lambda" {
   ]
   environment {
     variables = {
-      foo = "bar"
+      DBInstanceName = "userDB instance name"
     }
   }
 }
