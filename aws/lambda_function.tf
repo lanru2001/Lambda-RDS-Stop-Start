@@ -55,3 +55,30 @@ resource "aws_lambda_function" "test_lambda" {
     }
   }
 }
+
+resource "aws_cloudwatch_event_target" "example" {
+  arn  = aws_lambda_function.example.arn
+  rule = aws_cloudwatch_event_rule.example.id
+
+  input_transformer {
+    input_paths = {
+      instance = "$.detail.instance",
+      status   = "$.detail.status",
+    }
+    input_template = "\"<instance> is in state <status>\""
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "lambda_event" {
+  name        = "lambda-event"
+  description = "Lambda fucntion event rule"
+
+  event_pattern = <<EOF
+{
+  "detail-type": [
+    "stop"
+    "start"
+  ]
+}
+EOF
+}
