@@ -1,3 +1,10 @@
+data "archive_file" "lambda"{
+  type        =  "zip"
+  source_file = "lambda.py"
+  output_path = "${local.lambda_zip_location}"
+
+}
+
 resource "aws_cloudwatch_log_group" "example" {
   name              = "/aws/lambda/${var.lambda_function_name}"
   retention_in_days = 14
