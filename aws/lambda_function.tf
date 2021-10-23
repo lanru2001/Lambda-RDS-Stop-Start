@@ -1,10 +1,10 @@
-data "archive_file" "lambda"{
+# AWS Lambda need a zip file
+data "archive_file"  "lambda"{
   type        =  "zip"
   source_file = "lambda.py"
   output_path = "${local.lambda_zip_location}"
 
 }
-
 
 # See also the following AWS managed policy: AWSLambdaBasicExecutionRole
 resource "aws_iam_policy" "lambda_logging" {
