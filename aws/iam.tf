@@ -61,7 +61,7 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_scheduler" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.scheduler_lambda.function_name
+  function_name = aws_lambda_function.test_lambda.name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.check-scheduler-event.arn
 }
