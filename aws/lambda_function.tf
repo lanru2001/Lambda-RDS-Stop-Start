@@ -36,16 +36,20 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
 }
 
 resource "aws_lambda_function" "test_lambda" {
-  filename      = "lambda_function_payload.zip"
-  function_name = "lambda_function_name"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "index.test"
-
+  filename         = "lambda_function_payload.zip"
+  function_name    = "lambda_function_name"
+  role             = aws_iam_role.iam_for_lambda.arn
+  handler          = "index.test"
+  timeout          = 300
   # The filebase64sha256() function is available in Terraform 0.11.12 and later
   # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
   # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
-  source_code_hash = filebase64sha256("lambda_function_payload.zip")
-
+  #source_code_hash = filebase64sha256("lambda_function_payload.zip")
+  source_code_hash = data.archive_file.   .output_base64sha256
+  vpc_config {
+    security_group_ids = var.security_group_ids
+    subnet_ids         = var.subnet_ids
+  }
   runtime = "python2.7"
   
   depends_on = [
@@ -58,6 +62,41 @@ resource "aws_lambda_function" "test_lambda" {
     }
   }
 }
+
+
+# AWS Lambda function
+resource "aws_lambda_function" "scheduler_lambda" {
+  filename         = data.archive_file.aws-scheduler.output_path
+  function_name    = "${var.resource_name_prefix}aws-scheduler"
+  role             = aws_iam_role.scheduler_lambda.arn
+  handler          = "aws-scheduler.handler"
+  runtime          = "python3.7"
+  timeout          = 300
+  source_code_hash = data.archive_file.aws-scheduler.output_base64sha256
+  vpc_config {
+    security_group_ids = var.security_group_ids
+    subnet_ids         = var.subnet_ids
+  }
+  environment {
+    variables = {
+      TAG                = var.tag
+      SCHEDULE_TAG_FORCE = var.schedule_tag_force
+      EXCLUDE            = var.exclude
+      DEFAULT            = var.default
+      TIME               = var.time
+      RDS_SCHEDULE       = var.rds_schedule
+      EC2_SCHEDULE       = var.ec2_schedule
+    }
+  }
+}
+
+
+
+
+
+
+
+
 
 resource "aws_cloudwatch_event_target" "example" {
   arn  = aws_lambda_function.example.arn
