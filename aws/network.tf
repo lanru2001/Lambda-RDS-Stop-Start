@@ -1,5 +1,5 @@
 #VPC 
-resource "aws_vpc" "app_vpc" {
+resource "aws_vpc" "lambda_vpc" {
   cidr_block              = var.vpc_cidr 
   enable_dns_support      = true
   enable_dns_hostnames    = true
@@ -12,7 +12,7 @@ resource "aws_vpc" "app_vpc" {
 #Private subnets
 resource "aws_subnet" "app_private_subnets" {
   count                   = var.create ? 2:0 
-  vpc_id                  = aws_vpc.app_vpc.id
+  vpc_id                  = aws_vpc.lambda_vpc.id
   availability_zone       = var.azs[count.index]  
   cidr_block              = var.private_subnets_cidr[count.index]   
 
@@ -24,7 +24,7 @@ resource "aws_subnet" "app_private_subnets" {
 #Pubic subnets
 resource "aws_subnet" "app_public_subnets" {
   count                     = var.create ? 2:0 
-  vpc_id                   = aws_vpc.app_vpc.id
+  vpc_id                   = aws_vpc.lambda_vpc.id
   availability_zone        = var.azs[count.index]    
   map_public_ip_on_launch  = true
   cidr_block               = var.public_subnets_cidr[count.index]   
@@ -35,8 +35,8 @@ resource "aws_subnet" "app_public_subnets" {
 }
 
 #IGW
-resource "aws_internet_gateway" "app_igw" {
-  vpc_id                    = aws_vpc.app_vpc.id
+resource "aws_internet_gateway" "lambda_igw" {
+  vpc_id                    = aws_vpc.lambda_vpc.id
 
   tags     = {
     Name   = "${local.environment_prefix}-igw"
@@ -46,7 +46,7 @@ resource "aws_internet_gateway" "app_igw" {
 #Route table for public subnet
 resource "aws_route_table" "app_public_rtable" {
   count                     = var.create ? 2:0 
-  vpc_id                    = aws_vpc.app_vpc.id
+  vpc_id                    = aws_vpc.lambda_vpc.id
 
   route {
     cidr_block              = "0.0.0.0/0"
@@ -57,24 +57,24 @@ resource "aws_route_table" "app_public_rtable" {
     Name  = "${local.environment_prefix }-prtable-${count.index + 1}"
   }
 
-  depends_on = [aws_internet_gateway.app_igw]
+  depends_on = [aws_internet_gateway.lambda_igw]
 }
 
 #Route table for private subnet
 resource "aws_route_table" "app_private_rtable" {
   count                     = var.create ? 2:0 
-  vpc_id                    = aws_vpc.app_vpc.id
+  vpc_id                    = aws_vpc.lambda_vpc.id
 
   #route {
   #  cidr_block              = "0.0.0.0/0"
-  #  gateway_id              = aws_internet_gateway.app_igw.id
+  #  gateway_id              = aws_internet_gateway.lambda_igw.id
   #}
 
   tags    = {
     Name  = "${local.environment_prefix }-pvrtable-${count.index + 1}"
   }
 
-  depends_on = [aws_internet_gateway.app_igw]
+  depends_on = [aws_internet_gateway.lambda_igw]
 }
 
 #Assign the route table to public subnets
@@ -96,7 +96,7 @@ resource "aws_route" "public_route" {
   count           = var.create ? 2:0 
   route_table_id            = aws_route_table.app_public_rtable[count.index].id
   destination_cidr_block    = "0.0.0.0/0"
-  gateway_id                =  aws_internet_gateway.app_igw.id 
+  gateway_id                =  aws_internet_gateway.lambda_igw.id 
 }
 
 # private route 
@@ -111,7 +111,7 @@ resource "aws_route" "private_route" {
 resource "aws_eip" "nat_eip" {
    vpc                       = true 
    #associate_with_private_ip = "10.0.0.5"
-   depends_on                 = [aws_internet_gateway.app_igw]
+   depends_on                 = [aws_internet_gateway.lambda_igw]
 
 }
 
@@ -119,7 +119,7 @@ resource "aws_eip" "nat_eip" {
 resource "aws_nat_gateway" "app_nat_gw" {
   allocation_id             = aws_eip.nat_eip.id
   subnet_id                 = aws_subnet.app_public_subnets[0].id
-  depends_on                = [ aws_internet_gateway.app_igw ]
+  depends_on                = [ aws_internet_gateway.lambda_igw ]
 
   tags = {
     Name =  "${local.module_prefix}-nat-gateway"
