@@ -1,3 +1,9 @@
+# Cloudwatch log
+resource "aws_cloudwatch_log_group" "lambda_log" {
+  name              = "lambda/${var.lambda_function_name}"
+  retention_in_days = 14
+}
+
 # Cloudwatch event rule
 resource "aws_cloudwatch_event_rule" "check-scheduler-event" {
   name                = "${var.resource_name_prefix}check-scheduler-event"
