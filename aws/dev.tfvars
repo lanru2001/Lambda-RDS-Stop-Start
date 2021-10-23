@@ -1,64 +1,49 @@
-####################
-# Tags
-####################
-variable "project" {
-  default = "python-serverless-api"
-}
 
-variable "owner" {
-  default = "lanru2001@yahoo.com"
-}
+vpc_cidr = "10.0.0.0/16"
+
+public_subnets_cidr = ["10.0.1.0/24", "10.0.2.0/24"]
+
+private_subnets_cidr = ["10.0.3.0/24", "10.0.4.0/24"]
+
+azs = ["us-east-2a", "us-east-2b"]
+
+lambda_runtime = "python3.6"
+
+lambda_zip_path = 
+
+lambda_function_name = "HttpServer"
+
+lambda_handler = "run_lambda.http_server"
+
+region = "us-east-2"
+
+account_id
+   
+schedule_expression = "cron(5 * * * ? *)"
+ 
+tag =
+
+schedule_tag_force =
+permissions_boundary =
+
+exclude =
+
+default =
+ 
+
+time =
+ 
+
+ec2_schedule =
 
 
-####################
-# VPC
-####################
-variable vpc_cidr {
-  default = "10.0.0.0/16"
-}
+rds_schedule =
+ 
 
-variable public_subnets_cidr {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-}
+security_group_ids =
+ 
+subnet_ids =
 
-variable private_subnets_cidr {
-  default = ["10.0.3.0/24", "10.0.4.0/24"]
-}
+resource_name_prefix =
 
-variable nat_cidr {
-  default = ["10.0.5.0/24", "10.0.6.0/24"]
-}
 
-variable igw_cidr {
-  default = "10.0.8.0/24"
-}
-
-variable azs {
-  default = ["us-east-2a", "us-east-2b"]
-}
-
-####################
-# lambda
-####################
-variable "lambda_runtime" {
-  default = "python3.6"
-}
-
-variable "lambda_zip_path" {}
-
-variable "lambda_function_name" {
-  default = "HttpServer"
-}
-
-variable "lambda_handler" {
-  default = "run_lambda.http_server"
-}
-
-####################
-# API Gateway
-####################
-variable "region" {
-  default = "us-east-2"
-}
-
-variable "account_id" {}
