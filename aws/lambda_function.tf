@@ -1,42 +1,14 @@
 # AWS Lambda need a zip file
-data "archive_file"  "lambda"{
+data "archive_file"  "lambda_file"{
   type        =  "zip"
   source_file = "lambda.py"
   output_path = "${local.lambda_zip_location}"
 
 }
 
-# See also the following AWS managed policy: AWSLambdaBasicExecutionRole
-resource "aws_iam_policy" "lambda_logging" {
-  name        = "lambda_logging"
-  path        = "/"
-  description = "IAM policy for logging from a lambda"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "arn:aws:logs:*:*:*",
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_logs" {
-  role       = aws_iam_role.iam_for_lambda.name
-  policy_arn = aws_iam_policy.lambda_logging.arn
-}
-
+#AWS Lambda function
 resource "aws_lambda_function" "test_lambda" {
-  filename         = "lambda_function_payload.zip"
+  filename         = "data.archive_file.lambda_file.output_path"
   function_name    = "lambda_function_name"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "index.test"
@@ -45,7 +17,7 @@ resource "aws_lambda_function" "test_lambda" {
   # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
   # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
   #source_code_hash = filebase64sha256("lambda_function_payload.zip")
-  source_code_hash = data.archive_file.   .output_base64sha256
+  source_code_hash = data.archive_file.lambda_file.output_base64sha256
   vpc_config {
     security_group_ids = var.security_group_ids
     subnet_ids         = var.subnet_ids
@@ -62,41 +34,6 @@ resource "aws_lambda_function" "test_lambda" {
     }
   }
 }
-
-
-# AWS Lambda function
-resource "aws_lambda_function" "scheduler_lambda" {
-  filename         = data.archive_file.aws-scheduler.output_path
-  function_name    = "${var.resource_name_prefix}aws-scheduler"
-  role             = aws_iam_role.scheduler_lambda.arn
-  handler          = "aws-scheduler.handler"
-  runtime          = "python3.7"
-  timeout          = 300
-  source_code_hash = data.archive_file.aws-scheduler.output_base64sha256
-  vpc_config {
-    security_group_ids = var.security_group_ids
-    subnet_ids         = var.subnet_ids
-  }
-  environment {
-    variables = {
-      TAG                = var.tag
-      SCHEDULE_TAG_FORCE = var.schedule_tag_force
-      EXCLUDE            = var.exclude
-      DEFAULT            = var.default
-      TIME               = var.time
-      RDS_SCHEDULE       = var.rds_schedule
-      EC2_SCHEDULE       = var.ec2_schedule
-    }
-  }
-}
-
-
-
-
-
-
-
-
 
 resource "aws_cloudwatch_event_target" "example" {
   arn  = aws_lambda_function.example.arn
